@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Greggs.Products.Api.DataAccess;
 
-public interface IDataAccess<out T>
+public interface IDataAccess_ByStringKey<out T>
 {
-    IEnumerable<T> List(int? pageStart, int? pageSize);
+    T Get(string key);
 }

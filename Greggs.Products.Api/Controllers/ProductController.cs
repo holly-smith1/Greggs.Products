@@ -1,9 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using Greggs.Products.Api.DataAccess;
 using Greggs.Products.Api.Models;
+using Greggs.Products.Api.Utilities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using System.Collections.Generic;
 
 namespace Greggs.Products.Api.Controllers;
 
@@ -11,30 +11,35 @@ namespace Greggs.Products.Api.Controllers;
 [Route("[controller]")]
 public class ProductController : ControllerBase
 {
-    private static readonly string[] Products = new[]
-    {
-        "Sausage Roll", "Vegan Sausage Roll", "Steak Bake", "Yum Yum", "Pink Jammie"
-    };
-
     private readonly ILogger<ProductController> _logger;
+    private readonly IDataAccess<Product> _productAccess;
+    private readonly IDataAccess_ByStringKey<Currency> _currencyAccess;
 
-    public ProductController(ILogger<ProductController> logger)
+    public ProductController(ILogger<ProductController> logger, IDataAccess<Product> productAccess, IDataAccess_ByStringKey<Currency> currencyAccess)
     {
         _logger = logger;
+        _productAccess = productAccess;
+        _currencyAccess = currencyAccess;   
     }
 
     [HttpGet]
     public IEnumerable<Product> Get(int pageStart = 0, int pageSize = 5)
     {
-        if (pageSize > Products.Length)
-            pageSize = Products.Length;
-
-        var rng = new Random();
-        return Enumerable.Range(1, pageSize).Select(index => new Product
-            {
-                PriceInPounds = rng.Next(0, 10),
-                Name = Products[rng.Next(Products.Length)]
-            })
-            .ToArray();
+        return _productAccess.List(pageStart, pageSize);
     }
+
+
+    [HttpGet("~/ProductInCurrency")]
+    public IActionResult ProductInCurrency(int pageStart = 0, int pageSize = 5, string currencyCode = "GBP")
+    {
+        var products = _productAccess.List(pageStart, pageSize);
+        var currency = _currencyAccess.Get(currencyCode);
+        if (currency != null)
+        {
+            return Ok( ConvertProductsToCurrency.Convert(products, currency));
+        }
+        return BadRequest();
+
+    }
+
 }

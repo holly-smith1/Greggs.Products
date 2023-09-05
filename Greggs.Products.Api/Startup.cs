@@ -1,3 +1,5 @@
+using Greggs.Products.Api.DataAccess;
+using Greggs.Products.Api.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,6 +14,10 @@ public class Startup
         services.AddControllers();
 
         services.AddSwaggerGen();
+
+        services.AddSingleton<IDataAccess<Product>, ProductAccess>();
+
+        services.AddSingleton<IDataAccess_ByStringKey<Currency>, CurrencyAccess>();
     }
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -23,12 +29,13 @@ public class Startup
 
         app.UseSwagger();
         app.UseSwaggerUI(c => { c.SwaggerEndpoint("/swagger/v1/swagger.json", "Greggs Products API V1"); });
-
         app.UseHttpsRedirection();
 
         app.UseRouting();
 
         app.UseAuthorization();
+
+        app.ApplicationServices.GetRequiredService<IDataAccess<Product>>();
 
         app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
     }
